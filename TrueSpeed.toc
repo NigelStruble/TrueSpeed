@@ -1,0 +1,8 @@
+## Interface: 20505
+## Title: TrueSpeed
+## Notes: Measures true character speed using map coordinates. Works on flight paths!
+## Author: You
+## Version: 1.0.0
+## SavedVariables: TrueSpeedDB
+
+TrueSpeed.lua
