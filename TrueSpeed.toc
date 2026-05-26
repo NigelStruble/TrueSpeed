@@ -1,7 +1,7 @@
 ## Interface: 20505
 ## Title: TrueSpeed
 ## Notes: Measures true character speed using map coordinates. Works on flight paths!
-## Author: You
+## Author: Vedek
 ## Version: 1.0.0
 ## SavedVariables: TrueSpeedDB
 
