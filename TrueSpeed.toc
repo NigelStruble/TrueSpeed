@@ -4,5 +4,7 @@
 ## Author: Vedek
 ## Version: 1.0.0
 ## SavedVariables: TrueSpeedDB
+## OptionalDeps: ElvUI
 
 TrueSpeed.lua
+TrueSpeed_ElvUI.lua

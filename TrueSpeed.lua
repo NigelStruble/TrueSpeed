@@ -3,7 +3,7 @@
 -- Works everywhere including flight paths!
 ----------------------------------------------------------------------
 
-local ADDON_NAME = "TrueSpeed"
+local ADDON_NAME, ns = ...
 local BASE_RUN_SPEED = 7.0    -- yards per second at 100% speed
 
 -- Defaults for configurable sampling
@@ -296,9 +296,13 @@ local function SpeedColour(pct)
 end
 
 ----------------------------------------------------------------------
--- Update loop
+-- Update loop -- runs on a separate always-shown driver so sampling
+-- keeps going while the display frame is hidden (in instances, after
+-- `/ts hide`, etc.). That lets optional integrations like the ElvUI
+-- datatext continue to read a live speed value.
 ----------------------------------------------------------------------
-frame:SetScript("OnUpdate", function(self, dt)
+local updateDriver = CreateFrame("Frame")
+updateDriver:SetScript("OnUpdate", function(self, dt)
     elapsed = elapsed + dt
     local interval = db and db.updateInterval or DEFAULT_INTERVAL
     if elapsed < interval then return end
@@ -308,12 +312,13 @@ frame:SetScript("OnUpdate", function(self, dt)
     currentSpeed = CalculateSpeed()
     isMoving = currentSpeed > 0.5
 
-    local speedStr, roundedPct = FormatSpeed()
-    speedText:SetText(speedStr)
-    speedText:SetTextColor(SpeedColour(roundedPct))
-    secondaryText:SetText(FormatSecondary())
-
-    UpdateLayout()
+    if frame:IsShown() then
+        local speedStr, roundedPct = FormatSpeed()
+        speedText:SetText(speedStr)
+        speedText:SetTextColor(SpeedColour(roundedPct))
+        secondaryText:SetText(FormatSecondary())
+        UpdateLayout()
+    end
 end)
 
 ----------------------------------------------------------------------
@@ -660,3 +665,18 @@ SlashCmdList["TRUESPEED"] = function(msg)
         print("  Right-click the frame for a menu!")
     end
 end
+
+----------------------------------------------------------------------
+-- Public API
+-- Shared with sibling files (e.g. TrueSpeed_ElvUI.lua) through the
+-- addon's private namespace. Keep this surface small.
+----------------------------------------------------------------------
+ns.ADDON_NAME      = ADDON_NAME
+ns.BASE_RUN_SPEED  = BASE_RUN_SPEED
+
+function ns.GetSpeed()        return currentSpeed end
+function ns.GetSpeedPercent() return (currentSpeed / BASE_RUN_SPEED) * 100 end
+function ns.GetSpeedKnots()   return currentSpeed * 0.9144 / 0.5144 end
+function ns.IsMoving()        return isMoving end
+function ns.IsInWorld()       return isInWorld end
+function ns.SpeedColour(pct)  return SpeedColour(pct) end

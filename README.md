@@ -10,6 +10,7 @@ A lightweight World of Warcraft addon that measures your character's **actual** 
 - Color-coded readout so you can tell mount tiers apart at a glance
 - Movable, scalable frame with a right-click options menu
 - Auto-hides inside instances (raids, dungeons, battlegrounds)
+- Optional **ElvUI DataText** so the reading can live in any ElvUI panel
 - Configurable sampling rate and smoothing window for the trade-off between responsiveness and stability
 
 ## Installation
@@ -21,7 +22,7 @@ A lightweight World of Warcraft addon that measures your character's **actual** 
    ```
 3. Restart WoW (or `/reload` if already in-game) and enable **TrueSpeed** in the AddOns list.
 
-The `.toc` targets interface version `20505`. If your client reports it out of date, enable "Load out of date AddOns" in the character select AddOns menu.
+The `.toc` lists multiple interface versions (Classic Era, TBC Classic, a Classic expansion, and Retail), so the addon should load on any of those without needing "Load out of date AddOns" enabled. If your client still reports it out of date, enable that option in the character select AddOns menu.
 
 ## Usage
 
@@ -54,6 +55,16 @@ The main speed line is colored by speed tier:
 | Green | 101–200% | Ground mount |
 | Blue | 201–400% | Fast mount / flight form |
 | Orange | > 400% | Flight path / very fast travel |
+
+## ElvUI integration
+
+If [ElvUI](https://www.tukui.org/) is installed, TrueSpeed registers a **DataText** named `TrueSpeed` in the **Information** category. Add it to any ElvUI panel via *ElvUI &rarr; DataTexts &rarr; Panels* and pick `TrueSpeed` from the dropdown for whichever slot you want it in.
+
+- The label shows percent of base run speed, colored by the same tier rules as the floating frame.
+- Hovering reveals the full breakdown (yd/s, percent, knots, and the API-reported speed for comparison).
+- Left-clicking the datatext prints the slash-command help.
+
+The integration is purely optional — if ElvUI isn't loaded, `TrueSpeed_ElvUI.lua` returns immediately and has no effect. Sampling continues even when the floating frame is hidden, so the datatext stays live whether you keep the frame visible or not.
 
 ## How it works
 
