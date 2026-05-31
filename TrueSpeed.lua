@@ -6,6 +6,15 @@
 local ADDON_NAME, ns = ...
 local BASE_RUN_SPEED = 7.0    -- yards per second at 100% speed
 
+-- Version pulled from the .toc so we only ever maintain it in one place.
+local VERSION = "?"
+do
+    local meta = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
+    if meta then
+        VERSION = meta(ADDON_NAME, "Version") or VERSION
+    end
+end
+
 -- Defaults for configurable sampling
 local DEFAULT_INTERVAL = 0.1   -- seconds between coordinate samples
 local DEFAULT_WINDOW   = 10    -- number of samples to average over
@@ -341,7 +350,7 @@ UIDropDownMenu_Initialize(menuFrame, function(self, level, menuList)
     if level == 1 then
         -- Header
         info = UIDropDownMenu_CreateInfo()
-        info.text = "|cff00ccffTrueSpeed|r"
+        info.text = "|cff00ccffTrueSpeed|r  |cff888888v" .. VERSION .. "|r"
         info.isTitle = true
         info.notCheckable = true
         UIDropDownMenu_AddButton(info, level)
@@ -552,7 +561,7 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1)
         CheckWorldState()
         if not hasShownLoadMsg then
             hasShownLoadMsg = true
-            print("|cff00ccffTrueSpeed|r v1.0 loaded. Type |cff00ff00/ts|r or right-click for options.")
+            print("|cff00ccffTrueSpeed|r v" .. VERSION .. " loaded. Type |cff00ff00/ts|r or right-click for options.")
         end
 
     elseif event == "PLAYER_LOGOUT" then

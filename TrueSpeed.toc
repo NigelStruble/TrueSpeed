@@ -2,7 +2,7 @@
 ## Title: TrueSpeed
 ## Notes: Measures true character speed using map coordinates. Works on flight paths!
 ## Author: Vedek
-## Version: 1.0.0
+## Version: 1.1.0
 ## SavedVariables: TrueSpeedDB
 ## OptionalDeps: ElvUI
 
