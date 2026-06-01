@@ -53,6 +53,15 @@ for i = 1, MAX_WINDOW do
     samples[i] = { time = 0, x = 0, y = 0, mapID = 0 }
 end
 
+-- Scratch + last-value caches so the per-tick Format* helpers don't
+-- churn through a fresh table + a handful of strings on every update.
+-- The user-visible value only changes at most a few times a second; the
+-- update loop can fire 10-100x faster than that depending on settings.
+local _formatScratch = {}
+local _fmtSpeed10, _fmtShowY, _fmtShowP, _fmtShowK
+local _fmtText, _fmtPct
+local _apiPctCache, _apiTextCache
+
 ----------------------------------------------------------------------
 -- Coordinate helpers
 ----------------------------------------------------------------------
@@ -258,33 +267,50 @@ end
 -- Format helpers
 ----------------------------------------------------------------------
 local function FormatSpeed()
-    local parts = {}
+    -- Quantise to 0.1 yd/s -- matches the %.1f display precision, so any
+    -- two raw values that would print identically share a cache slot.
+    local quantSpeed = math.floor(currentSpeed * 10 + 0.5)
+    local sy, sp, sk = db.showYards, db.showPercent, db.showKnots
+
+    if _fmtText
+        and quantSpeed == _fmtSpeed10
+        and sy == _fmtShowY
+        and sp == _fmtShowP
+        and sk == _fmtShowK then
+        return _fmtText, _fmtPct
+    end
+
     local rawPct = (currentSpeed / BASE_RUN_SPEED) * 100
     local roundedPct = math.floor(rawPct + 0.5)
 
-    if db.showYards then
-        table.insert(parts, string.format("%.1f yd/s", currentSpeed))
+    local parts = _formatScratch
+    local n = 0
+    if sy then
+        n = n + 1; parts[n] = string.format("%.1f yd/s", currentSpeed)
     end
-    if db.showPercent then
-        table.insert(parts, string.format("%d%%", roundedPct))
+    if sp then
+        n = n + 1; parts[n] = string.format("%d%%", roundedPct)
     end
-    if db.showKnots then
-        local knots = currentSpeed * 0.9144 / 0.5144
-        table.insert(parts, string.format("%.1f kn", knots))
+    if sk then
+        n = n + 1; parts[n] = string.format("%.1f kn", currentSpeed * 0.9144 / 0.5144)
     end
 
-    local text = ""
-    if #parts > 0 then
-        text = table.concat(parts, "  |cff888888·|r  ")
-    end
+    local text = (n > 0) and table.concat(parts, "  |cff888888·|r  ", 1, n) or ""
+
+    _fmtSpeed10, _fmtShowY, _fmtShowP, _fmtShowK = quantSpeed, sy, sp, sk
+    _fmtText, _fmtPct = text, roundedPct
     return text, roundedPct
 end
 
 local function FormatSecondary()
     if not db.showAPI then return "" end
-    local unitSpeed = GetUnitSpeed("player")
-    local unitPct = (unitSpeed / BASE_RUN_SPEED) * 100
-    return string.format("|cff888888API: %.0f%%|r", unitPct)
+    local unitPct = math.floor((GetUnitSpeed("player") / BASE_RUN_SPEED) * 100 + 0.5)
+    if unitPct == _apiPctCache and _apiTextCache then
+        return _apiTextCache
+    end
+    _apiPctCache = unitPct
+    _apiTextCache = string.format("|cff888888API: %d%%|r", unitPct)
+    return _apiTextCache
 end
 
 ----------------------------------------------------------------------

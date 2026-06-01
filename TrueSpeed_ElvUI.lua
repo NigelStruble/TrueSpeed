@@ -27,29 +27,42 @@ local MS_TO_KNOTS    = 0.9144 / 0.5144   -- yd/s -> knots (1 yd = 0.9144 m)
 ----------------------------------------------------------------------
 -- Helpers
 ----------------------------------------------------------------------
+-- ns.SpeedColour returns one of ~5 fixed (r,g,b) tuples, so the colour
+-- escape string only has a handful of possible values. Cache them so we
+-- aren't string.format-ing every panel tick.
+local _colourCache = {}
 local function ColourCode(pct)
     local r, g, b = 1, 1, 1
     if ns.SpeedColour then
         r, g, b = ns.SpeedColour(pct)
     end
-    return string.format("|cff%02x%02x%02x",
-        math.floor(r * 255 + 0.5),
-        math.floor(g * 255 + 0.5),
-        math.floor(b * 255 + 0.5))
+    local ri = math.floor(r * 255 + 0.5)
+    local gi = math.floor(g * 255 + 0.5)
+    local bi = math.floor(b * 255 + 0.5)
+    local key = ri * 65536 + gi * 256 + bi
+    local code = _colourCache[key]
+    if not code then
+        code = string.format("|cff%02x%02x%02x", ri, gi, bi)
+        _colourCache[key] = code
+    end
+    return code
 end
 
 ----------------------------------------------------------------------
--- OnUpdate: refresh the datatext label
--- ElvUI calls this on the panel's own tick. We just read the latest
--- value from the shared namespace -- the heavy lifting (sampling,
--- smoothing) happens in TrueSpeed.lua's always-shown driver frame.
+-- OnUpdate: refresh the datatext label.
+-- ElvUI calls this on the panel's own OnUpdate (potentially every
+-- frame), so we early-return when the displayed integer percent is
+-- unchanged -- that turns idle/steady-speed ticks into a single
+-- comparison with zero allocations. The actual speed sampling still
+-- runs at TrueSpeed.lua's configured interval.
 ----------------------------------------------------------------------
+local _lastPct = -1
 local function OnUpdate(self)
     local yps = (ns.GetSpeed and ns.GetSpeed()) or 0
-    local pct = (yps / BASE_RUN_SPEED) * 100
-    self.text:SetFormattedText("%sSpeed:|r %d%%",
-        ColourCode(pct),
-        math.floor(pct + 0.5))
+    local pct = math.floor((yps / BASE_RUN_SPEED) * 100 + 0.5)
+    if pct == _lastPct then return end
+    _lastPct = pct
+    self.text:SetFormattedText("%sSpeed:|r %d%%", ColourCode(pct), pct)
 end
 
 ----------------------------------------------------------------------
