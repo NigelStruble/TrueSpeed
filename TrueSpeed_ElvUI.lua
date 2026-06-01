@@ -55,10 +55,21 @@ end
 -- unchanged -- that turns idle/steady-speed ticks into a single
 -- comparison with zero allocations. The actual speed sampling still
 -- runs at TrueSpeed.lua's configured interval.
+--
+-- Inside instances the coordinate-based measurement isn't available
+-- (the world-pos API returns nothing useful and TrueSpeed.lua resets
+-- its samples on zone change), so we transparently fall back to the
+-- game's reported `GetUnitSpeed` value. The tooltip still labels the
+-- two sources separately for clarity.
 ----------------------------------------------------------------------
 local _lastPct = -1
 local function OnUpdate(self)
-    local yps = (ns.GetSpeed and ns.GetSpeed()) or 0
+    local yps
+    if ns.IsInWorld and not ns.IsInWorld() then
+        yps = (GetUnitSpeed and GetUnitSpeed("player")) or 0
+    else
+        yps = (ns.GetSpeed and ns.GetSpeed()) or 0
+    end
     local pct = math.floor((yps / BASE_RUN_SPEED) * 100 + 0.5)
     if pct == _lastPct then return end
     _lastPct = pct
