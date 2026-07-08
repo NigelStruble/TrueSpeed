@@ -1,4 +1,4 @@
-## Interface: 11508,20505,50503,120005
+## Interface: 11508,20506,50504,120100
 ## Title: TrueSpeed
 ## Notes: Measures true character speed using map coordinates. Works on flight paths!
 ## Author: Vedek
